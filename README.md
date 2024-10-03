@@ -9,6 +9,3 @@ This template includes a GitHub workflow to build your plugin for Windows and Li
 [`src/example_plugin.cpp`](./src/example_plugin.cpp) - Change `example_plugin` to the same name used above.
 
 [`.github/workflows/cmake-compile.yml`](./.github/workflows/cmake-compile.yml) - Change `PROJECT_NAME` to the same name used above.
-
-
-Of course feel free to change file names to reflect your project name too. I don't want to see any projects named "example_plugin".
