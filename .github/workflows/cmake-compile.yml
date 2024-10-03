@@ -1,0 +1,68 @@
+name: CMake Compile
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  PROJECT_NAME: example_plugin
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        build_type: [Release, RelWithDebInfo]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Clang (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y clang
+
+      - name: Configure CMake (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          export CC=clang
+          export CXX=clang++
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+
+      - name: Configure CMake (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="/Z7" -DCMAKE_C_FLAGS_RELWITHDEBINFO="/Z7"
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+
+      - name: Upload Artifact (Windows - Release)
+        if: matrix.os == 'windows-latest' && matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.PROJECT_NAME}}_windows
+          path: ${{github.workspace}}/build/Release/${{env.PROJECT_NAME}}_windows.dll
+
+      - name: Upload Artifact (Windows - Debug)
+        if: matrix.os == 'windows-latest' && matrix.build_type == 'RelWithDebInfo'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.PROJECT_NAME}}_windows_debug
+          path: ${{github.workspace}}/build/RelWithDebInfo/${{env.PROJECT_NAME}}_windows_debug.dll
+
+      - name: Upload Artifact (Linux - Release)
+        if: matrix.os == 'ubuntu-latest' && matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.PROJECT_NAME}}_linux
+          path: ${{github.workspace}}/build/${{env.PROJECT_NAME}}_linux.so
+
+      - name: Upload Artifact (Linux - Debug)
+        if: matrix.os == 'ubuntu-latest' && matrix.build_type == 'RelWithDebInfo'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.PROJECT_NAME}}_linux_debug
+          path: ${{github.workspace}}/build/${{env.PROJECT_NAME}}_linux_debug.so
